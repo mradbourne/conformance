@@ -1,0 +1,20 @@
+{
+  "scenario": "Literal text",
+  "description": "Text placed directly into the pattern",
+  "forEach": {
+    "testType": "syntax",
+    "locale": "en-US"
+  },
+  "tests": [
+    {
+      "label": "Includes basic literals",
+      "pattern": "hello world",
+      "verify": "hello world"
+    },
+    {
+      "label": "Includes unquoted literals",
+      "pattern": "hello {world}",
+      "verify": "hello world"
+    }
+  ]
+}
