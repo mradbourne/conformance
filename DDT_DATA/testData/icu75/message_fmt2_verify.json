@@ -1,0 +1,29 @@
+{
+  "test_type": "message_fmt2",
+  "verifications": [
+    {
+      "label": "Literal text: Includes basic literals",
+      "verify": "hello world"
+    },
+    {
+      "label": "Literal text: Includes unquoted literals",
+      "verify": "hello world"
+    },
+    {
+      "label": "Whitespace: Preserves leading space on basic literals",
+      "verify": "  hello world"
+    },
+    {
+      "label": "Whitespace: Removes leading space on unquoted literals",
+      "verify": "hello world"
+    },
+    {
+      "label": "Whitespace: Preserves trailing space on basic literals",
+      "verify": "hello world  "
+    },
+    {
+      "label": "Whitespace: Removes trailing space on unquoted literals",
+      "verify": "hello world"
+    }
+  ]
+}
