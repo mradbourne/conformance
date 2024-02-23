@@ -2,38 +2,44 @@
   "test_type": "message_fmt2",
   "tests": [
     {
-      "label": "Literal text: Includes basic literals",
-      "testSubType": "syntax",
+      "label": "00000",
+      "test_description": "Literal text: Includes basic literals",
+      "test_subtype": "syntax",
       "locale": "en-US",
       "pattern": "hello world"
     },
     {
-      "label": "Literal text: Includes unquoted literals",
-      "testSubType": "syntax",
+      "label": "00001",
+      "test_description": "Literal text: Includes unquoted literals",
+      "test_subtype": "syntax",
       "locale": "en-US",
       "pattern": "hello {world}"
     },
     {
-      "label": "Whitespace: Preserves leading space on basic literals",
-      "testSubType": "syntax",
+      "label": "00002",
+      "test_description": "Whitespace: Preserves leading space on basic literals",
+      "test_subtype": "syntax",
       "locale": "en-US",
       "pattern": "  hello world"
     },
     {
-      "label": "Whitespace: Removes leading space on unquoted literals",
-      "testSubType": "syntax",
+      "label": "00003",
+      "test_description": "Whitespace: Removes leading space on unquoted literals",
+      "test_subtype": "syntax",
       "locale": "en-US",
       "pattern": "hello {  world}"
     },
     {
-      "label": "Whitespace: Preserves trailing space on basic literals",
-      "testSubType": "syntax",
+      "label": "00004",
+      "test_description": "Whitespace: Preserves trailing space on basic literals",
+      "test_subtype": "syntax",
       "locale": "en-US",
       "pattern": "hello world  "
     },
     {
-      "label": "Whitespace: Removes trailing space on unquoted literals",
-      "testSubType": "syntax",
+      "label": "00005",
+      "test_description": "Whitespace: Removes trailing space on unquoted literals",
+      "test_subtype": "syntax",
       "locale": "en-US",
       "pattern": "hello {world  }"
     }
