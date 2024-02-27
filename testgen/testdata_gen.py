@@ -10,6 +10,9 @@ import os
 import re
 import requests
 from enum import Enum
+import glob
+from pathlib import Path
+from jsonschema import Draft202012Validator, ValidationError
 
 reblankline = re.compile('^\s*$')
 
@@ -27,6 +30,10 @@ class TestType(str, Enum):
     COLLATION_SHORT = 'collation_short'
     LANG_NAMES = 'lang_names'
     LIKELY_SUBTAGS = 'likely_subtags'
+    MESSAGE_FMT2 = 'message_fmt2'
+
+    def __str__(self):
+        return self.value
 
 
 class generateData():
@@ -41,10 +48,10 @@ class generateData():
         self.icu_version = selected_version
 
     def saveJsonFile(self, filename, data, indent=None):
-      output_path = os.path.join(self.icu_version, filename)
-      output_file = open(output_path, 'w', encoding='UTF-8')
-      json.dump(data, output_file, indent=indent)
-      output_file.close()
+        output_path = Path(os.path.dirname(__file__), '..', 'DDT_DATA', 'testData', self.icu_version, filename)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, 'w', encoding='UTF-8') as output_file:
+            json.dump(data, output_file, indent=indent)
 
     def getTestDataFromGitHub(self, datafile_name, version):
         # Path for fetching test data from ICU repository
@@ -325,20 +332,74 @@ class generateData():
         logging.info('Likely Subtags Test (%s): %d lines processed', self.icu_version, count)
         return
 
+    def processMessageFmt2TestData(self):
+        json_test = {'test_type': str(TestType.MESSAGE_FMT2), 'tests': []}
+        json_verify = {'test_type': str(TestType.MESSAGE_FMT2), 'verifications': []}
+
+        src_dir = Path(os.path.dirname(__file__), self.icu_version, TestType.MESSAGE_FMT2)
+        src_file_paths = glob.glob(os.path.join(src_dir, '**', '*.json'), recursive=True)
+        src_file_paths.sort()
+
+        json_schema_path = Path(os.path.dirname(__file__), '..', 'schema', TestType.MESSAGE_FMT2, 'testgen_schema.json')
+        json_schema_validator = Draft202012Validator(json.load(open(json_schema_path)))
+
+        test_count = 0
+        test_list = []
+        verify_list = []
+
+        for test_file_path in src_file_paths:
+            src_data = readFile(test_file_path, filetype='json')
+            defaults = src_data.get('defaultTestProperties')
+
+            try:
+                json_schema_validator.validate(src_data)
+            except ValidationError as err:
+                logging.error('PROBLEM VALIDATING JSON: %s', test_file_path)
+                logging.error(err)
+
+            for src_test in src_data['tests']:
+                test_count += 1
+                label = f'{test_count - 1:05d}'
+                description = f'{src_data["scenario"]}: {src_test["description"]}'
+
+                try:
+                    test_list.append({
+                        'label': label,
+                        'test_description': description,
+                        'test_subtype': src_test.get('testSubtype') or defaults['testSubtype'],
+                        'locale': src_test.get('locale') or defaults['locale'],
+                        'pattern': src_test.get('pattern') or defaults['pattern']
+                    })
+                    verify_list.append({
+                        'label': label,
+                        'verify': src_test['verify']
+                    })
+                except KeyError as err:
+                    logging.error('Missing value for %s in %s', err, test_file_path)
+                    logging.error('Omitting test %s (%s)', label, description)
+
+        json_test["tests"] = self.sample_tests(test_list)
+        json_verify["verifications"] = self.sample_tests(verify_list)
+
+        self.saveJsonFile(f'{TestType.MESSAGE_FMT2}_test.json', json_test, 2)
+        self.saveJsonFile(f'{TestType.MESSAGE_FMT2}_verify.json', json_verify, 2)
+
+        logging.info('MessageFormat2 Test (%s): %d tests processed', self.icu_version, test_count)
+
 
 # Utility functions
 def computeMaxDigitsForCount(count):
     return math.ceil(math.log10(count + 1))
 
 
-def readFile(filename, version=''):
+def readFile(filename, version='', filetype='txt'):
     # If version is provided, it refers to a subdirectory containing the test source
     path = filename
     if version:
         path = os.path.join(version, filename)
     try:
         with open(path, 'r', encoding='utf-8') as testdata:
-            return testdata.read()
+            return json.load(testdata) if filetype == 'json' else testdata.read()
     except BaseException as err:
         logging.warning('** READ: Error = %s', err)
         return None
@@ -1073,6 +1134,9 @@ def generate_versioned_data(version_info):
     if TestType.LANG_NAMES in new_args.test_types:
         # This is slow
         data_generator.processLangNameTestData()
+
+    if TestType.MESSAGE_FMT2 in new_args.test_types:
+        data_generator.processMessageFmt2TestData()
 
     logging.info('++++ Data generation for %s is complete.', icu_version)
 
