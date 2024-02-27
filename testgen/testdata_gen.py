@@ -349,18 +349,23 @@ class generateData():
 
         for test_file_path in src_file_paths:
             src_data = readFile(test_file_path, filetype='json')
+            if src_data is None:
+                logging.error('Problem reading JSON. Omitting file %s', test_file_path)
+                continue
+
             defaults = src_data.get('defaultTestProperties')
 
             try:
                 json_schema_validator.validate(src_data)
             except ValidationError as err:
-                logging.error('PROBLEM VALIDATING JSON: %s', test_file_path)
+                logging.error('Problem validating JSON: %s', test_file_path)
                 logging.error(err)
 
             for src_test in src_data['tests']:
                 test_count += 1
                 label = f'{test_count - 1:05d}'
                 description = f'{src_data["scenario"]}: {src_test["description"]}'
+                args = src_test.get('args') or (defaults.get('args') if defaults else None)
 
                 try:
                     test_list.append({
@@ -368,7 +373,8 @@ class generateData():
                         'test_description': description,
                         'test_subtype': src_test.get('testSubtype') or defaults['testSubtype'],
                         'locale': src_test.get('locale') or defaults['locale'],
-                        'pattern': src_test.get('pattern') or defaults['pattern']
+                        'pattern': src_test.get('pattern') or defaults['pattern'],
+                        **({'args': args} if args else {})
                     })
                     verify_list.append({
                         'label': label,
