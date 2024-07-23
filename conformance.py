@@ -2,6 +2,10 @@ import os
 import sys
 import argparse
 
+DOCKER_CMD = (
+    "docker run --rm -v .:/conformance -it $(docker build -t conformance:latest -q .)"
+)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -19,9 +23,8 @@ def main():
     args = parser.parse_args()
 
     if args.action == "shell":
-        cmd = "docker run --rm -it $(docker build -t conformance:latest -q .)"
-        print(cmd)
-        os.system(cmd)
+        print(DOCKER_CMD)
+        os.system(DOCKER_CMD)
         return
 
     if args.containerize:
@@ -34,8 +37,8 @@ def main():
 def rerun_in_container():
     cmd = " ".join(
         [
-            "docker run --rm -it $(docker build -t conformance:latest -q .)",
-            "python3 conformance.py --no-containerize",
+            DOCKER_CMD,
+            f"python3 {os.path.basename(__file__)} --no-containerize",
             *sys.argv[1:],
         ]
     )
