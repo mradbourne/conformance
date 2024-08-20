@@ -1,5 +1,23 @@
+import os
+import sys
 import argparse
-from conformance_cli.test_type import test_types
+
+from .test_type import test_types
+
+
+DOCKER_CMD = (
+    "docker run --rm -v .:/conformance -it $(docker build -t conformance:latest -q .)"
+)
+
+
+def run():
+    args = parse_args()
+
+    if args.containerize:
+        rerun_in_container()
+        return
+
+    print(args)
 
 
 def parse_args():
@@ -7,7 +25,7 @@ def parse_args():
 
     # Which actions to perform
     parser.add_argument(
-        "--generate", action=argparse.BooleanOptionalAction, default=True
+        "--testgen", action=argparse.BooleanOptionalAction, default=True
     )
     parser.add_argument(
         "--execute", action=argparse.BooleanOptionalAction, default=True
@@ -33,6 +51,13 @@ def parse_args():
     return parser.parse_args()
 
 
-def run():
-    args = parse_args()
-    print(args)
+def rerun_in_container():
+    cmd = " ".join(
+        [
+            DOCKER_CMD,
+            "python3 conformance.py --no-containerize",
+            *sys.argv[1:],
+        ]
+    )
+    print(cmd)
+    os.system(cmd)

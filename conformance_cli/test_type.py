@@ -1,7 +1,7 @@
-from enum import StrEnum
+from enum import Enum
 
 
-class TestType(StrEnum):
+class TestType(str, Enum):
     COLLATION_SHORT = "collation_short"
     DATETIME_FMT = "datetime_fmt"
     LANG_NAMES = "lang_names"
