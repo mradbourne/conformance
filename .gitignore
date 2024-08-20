@@ -21,6 +21,9 @@ DDT_DATA/testReports*/*
 
 TEMP_DATA
 
+# Python virtual environment (for development)
+.venv/
+
 # testgen temporary files
 testgen/icu*/*.json
 
