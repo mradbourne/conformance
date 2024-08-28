@@ -3,9 +3,5 @@
 import conformance_cli
 
 
-def main():
-    conformance_cli.run()
-
-
 if __name__ == "__main__":
-    main()
+    conformance_cli.run()
