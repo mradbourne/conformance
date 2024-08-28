@@ -4,8 +4,8 @@ import logging
 import glob
 from pathlib import Path
 from jsonschema import validate, ValidationError
-from generators.base import DataGenerator
-from test_type import TestType
+from conformance_cli.test_type import TestType
+from .base import DataGenerator
 
 
 class MessageFmt2Generator(DataGenerator):

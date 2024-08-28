@@ -3,7 +3,7 @@ import os
 import json
 import re
 import logging
-from generators.base import DataGenerator
+from .base import DataGenerator
 
 reblankline = re.compile("^\s*$")
 

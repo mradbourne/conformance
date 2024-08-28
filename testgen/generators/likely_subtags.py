@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-from generators.base import DataGenerator
+from .base import DataGenerator
 
 
 class LikelySubtagsGenerator(DataGenerator):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import logging
-from generators.base import DataGenerator
+from .base import DataGenerator
 
 reblankline = re.compile("^\s*$")
 

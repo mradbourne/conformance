@@ -4,7 +4,7 @@ import json
 import re
 import logging
 import subprocess
-from generators.base import DataGenerator
+from .base import DataGenerator
 
 reblankline = re.compile("^\s*$")
 

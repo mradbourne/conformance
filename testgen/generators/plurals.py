@@ -6,7 +6,7 @@ import logging
 import subprocess
 import xml.etree.ElementTree as ET
 
-from generators.base import DataGenerator
+from .base import DataGenerator
 
 reblankline = re.compile("^\s*$")
 

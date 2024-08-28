@@ -4,10 +4,8 @@ import argparse
 
 from .test_type import test_types
 
-
-DOCKER_CMD = (
-    "docker run --rm -v .:/conformance -it $(docker build -t conformance:latest -q .)"
-)
+DOCKER_BUILD_CMD = "docker build -t conformance:latest ."
+DOCKER_RUN_CMD = "docker run --rm -v .:/conformance -it conformance:latest"
 
 
 def run():
@@ -17,7 +15,11 @@ def run():
         rerun_in_container()
         return
 
-    print(args)
+    # Importing after containerizing to avoid missing dependencies
+    from testgen import testdata_gen
+
+    if args.testgen:
+        testdata_gen.run(args)
 
 
 def parse_args():
@@ -52,9 +54,12 @@ def parse_args():
 
 
 def rerun_in_container():
+    print(DOCKER_BUILD_CMD)
+    os.system(DOCKER_BUILD_CMD)
+
     cmd = " ".join(
         [
-            DOCKER_CMD,
+            DOCKER_RUN_CMD,
             "python3 conformance.py --no-containerize",
             *sys.argv[1:],
         ]
