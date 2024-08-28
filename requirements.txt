@@ -1,2 +1,6 @@
+jsonschema==4.23.0
+requests==2.32.3
+
+# Dev dependencies
 black==24.8.0
 flake8==7.1.1

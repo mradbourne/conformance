@@ -5,7 +5,6 @@
 
 .pylintrc
 .idea
-.devcontainer
 
 executors/rust/target/
 executors/cpp/executor
