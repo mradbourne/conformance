@@ -2,13 +2,14 @@ import os
 import sys
 import argparse
 
-from .config import test_types, executors
+from .config import init_config, test_types, executors
 
 DOCKER_BUILD_CMD = "docker build -t conformance:latest ."
 DOCKER_RUN_CMD = "docker run --rm -v .:/conformance -it conformance:latest"
 
 
 def run():
+    init_config()
     args = parse_args()
 
     if args.shell:

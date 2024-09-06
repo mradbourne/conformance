@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import logging
-import logging.config
 import multiprocessing as mp
 import re
+import logging
 
-from conformance_cli.test_type import TestType
+from conformance_cli.config import TestType
 from .generators.collation_short import CollationShortGenerator
 from .generators.datetime_fmt import DateTimeFmtGenerator
 from .generators.lang_names import LangNamesGenerator
@@ -15,12 +14,13 @@ from .generators.number_fmt import NumberFmtGenerator
 from .generators.plurals import PluralGenerator
 from .generators.relativedatetime_fmt import RelativeDateTimeFmtGenerator
 
+logger = logging.getLogger(__name__)
 reblankline = re.compile("^\s*$")
 
 
 def generate_versioned_data_parallel(args):
     num_processors = mp.cpu_count()
-    logging.info(
+    logger.info(
         "Test data generation: %s processors for %s plans",
         num_processors,
         len(args.icu_versions),
@@ -41,13 +41,13 @@ def generate_versioned_data(version_info):
     args = version_info["args"]
     icu_version = version_info["icu_version"]
 
-    logging.info(
+    logger.info(
         "Generating .json files for data driven testing. ICU_VERSION requested = %s",
         icu_version,
     )
 
     if len(args.test_types) < len(TestType):
-        logging.info("(Only generating %s)", ", ".join(args.test_types))
+        logger.info("(Only generating %s)", ", ".join(args.test_types))
 
     if TestType.COLLATION_SHORT in args.test_types:
         # This is slow
@@ -91,13 +91,15 @@ def generate_versioned_data(version_info):
         # This is slow
         generator = PluralGenerator(icu_version, args.testgen_run_limit)
         generator.process_test_data()
-    logging.info("++++ Data generation for %s is complete.", icu_version)
+    logger.info("++++ Data generation for %s is complete.", icu_version)
 
 
 def run(args):
-    logging.config.fileConfig("logging.conf")
-    logger = logging.Logger("TEST_GENERATE LOGGER")
-    logger.setLevel(logging.INFO)
+    logger.info("Generating test data...")
+    if args.run_serial:
+        logger.warn(
+            "'run_serial' is set"
+            + " but test data generation always runs in parallel if possible."
+        )
 
-    # Generate version data in parallel if possible
     generate_versioned_data_parallel(args)

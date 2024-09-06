@@ -1,4 +1,9 @@
+import logging.config
 from enum import Enum
+
+
+def init_config():
+    logging.config.fileConfig("logging.conf")
 
 
 class TestType(str, Enum):
