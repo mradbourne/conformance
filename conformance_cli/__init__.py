@@ -11,6 +11,10 @@ DOCKER_RUN_CMD = "docker run --rm -v .:/conformance -it conformance:latest"
 def run():
     args = parse_args()
 
+    if args.shell:
+        run_in_docker("bash")
+        return
+
     if args.containerize:
         rerun_in_container()
         return
@@ -49,20 +53,22 @@ def parse_args():
     parser.add_argument(
         "--testgen_run_limit", nargs="?", type=int, default=-1  # -1 is no limit
     )
+    parser.add_argument("--shell", action="store_true")
 
     return parser.parse_args()
 
 
 def rerun_in_container():
+    run_in_docker(
+        "python3 conformance.py --no-containerize",
+        *sys.argv[1:],
+    )
+
+
+def run_in_docker(*docker_args):
     print(DOCKER_BUILD_CMD)
     os.system(DOCKER_BUILD_CMD)
 
-    cmd = " ".join(
-        [
-            DOCKER_RUN_CMD,
-            "python3 conformance.py --no-containerize",
-            *sys.argv[1:],
-        ]
-    )
+    cmd = " ".join([DOCKER_RUN_CMD, *docker_args])
     print(cmd)
     os.system(cmd)
