@@ -14,3 +14,16 @@ class TestType(str, Enum):
 
 
 test_types = [t.value for t in TestType]
+
+
+class Executor(str, Enum):
+    CPP = "cpp"
+    DART_NATIVE = "dart_native"
+    DART_WEB = "dart_web"
+    ICU4J = "icu4j"
+    NODE = "node"
+    PYTHON = "python"
+    RUST = "rust"
+
+
+executors = [e.value for e in Executor]

@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 
-from .test_type import test_types
+from .config import test_types, executors
 
 DOCKER_BUILD_CMD = "docker build -t conformance:latest ."
 DOCKER_RUN_CMD = "docker run --rm -v .:/conformance -it conformance:latest"
@@ -25,6 +25,9 @@ def run():
     if args.testgen:
         testdata_gen.run(args)
 
+    if args.exec:
+        print("TODO: Invoke testdriver with args", args.exec)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -34,8 +37,12 @@ def parse_args():
         "--testgen", action=argparse.BooleanOptionalAction, default=True
     )
     parser.add_argument(
-        "--execute", action=argparse.BooleanOptionalAction, default=True
+        "--exec",
+        nargs="*",
+        choices=executors,
+        default=executors,
     )
+    parser.add_argument("--no-exec", dest="exec", action="store_false")
 
     # Which tests to perform the action(s) on
     parser.add_argument("--icu_versions", nargs="*", default=[])
@@ -48,10 +55,14 @@ def parse_args():
 
     # Other configuration options
     parser.add_argument(
-        "--containerize", action=argparse.BooleanOptionalAction, default=True
+        "--testgen_run_limit", nargs="?", type=int, default=-1  # -1 is no limit
     )
     parser.add_argument(
-        "--testgen_run_limit", nargs="?", type=int, default=-1  # -1 is no limit
+        "--exec_run_limit", nargs="?", type=int, default=-1  # -1 is no limit
+    )
+    parser.add_argument("--run_serial", action="store_true")
+    parser.add_argument(
+        "--containerize", action=argparse.BooleanOptionalAction, default=True
     )
     parser.add_argument("--shell", action="store_true")
 

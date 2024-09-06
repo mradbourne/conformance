@@ -4,7 +4,7 @@ import logging
 import glob
 from pathlib import Path
 from jsonschema import validate, ValidationError
-from conformance_cli.test_type import TestType
+from conformance_cli.config import TestType
 from .base import DataGenerator
 
 
