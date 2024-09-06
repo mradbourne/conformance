@@ -2,24 +2,14 @@
 # 1. Parse into JSON structure
 # 2. For each test, stringify and output as single line to stdout
 
-from datetime import datetime
-import json
-
 import multiprocessing as mp
-
-import os
-import subprocess
-import sys
 import logging
 
 import datasets as ddt_data
 import ddtargs
-
 from testplan import TestPlan
 
 logger = logging.getLogger(__name__)
-
-# TODO: Separate TestPlan into another module.
 
 
 class TestDriver:
