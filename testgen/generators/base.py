@@ -16,7 +16,7 @@ def remove_none(obj):
         return obj
     result = copy.copy(obj)
     if hasattr(obj, "items"):
-        for (key, value) in obj.items():
+        for key, value in obj.items():
             if value is None:
                 del result[key]
             else:
@@ -24,9 +24,10 @@ def remove_none(obj):
     elif hasattr(obj, "__iter__"):
         if len(obj) == 1 and obj[0] == obj:
             return result
-        for (i, value) in enumerate(obj):
+        for i, value in enumerate(obj):
             result[i] = remove_none(value)
     return result
+
 
 class DataGenerator(ABC):
     def __init__(self, icu_version, run_limit=None):
@@ -38,7 +39,6 @@ class DataGenerator(ABC):
     def process_test_data(self):
         pass
 
-
     def generateTestHashValues(self, testdata):
         # For each test item, copy it. Omit 'label' from that copy.
         # Create the string representation of that copy with json.dumps()
@@ -46,39 +46,49 @@ class DataGenerator(ABC):
         # Add it to that item.
 
         try:
-            all_tests =  testdata['tests']
+            all_tests = testdata["tests"]
         except BaseException as error:
-            logging.error('# generateTestHashValues: %s does not have "tests": %s',
-                          error, testdata.keys())
+            logging.error(
+                '# generateTestHashValues: %s does not have "tests": %s',
+                error,
+                testdata.keys(),
+            )
             return None
 
         for test in all_tests:
             try:
                 test_no_label = test.copy()
             except BaseException as error:
-                logging.error('error: %s, Item with no label found here: %s, %s' ,
-                              error, testdata['test_type'], test)
+                logging.error(
+                    "error: %s, Item with no label found here: %s, %s",
+                    error,
+                    testdata["test_type"],
+                    test,
+                )
                 continue
-            del test_no_label['label']
+            del test_no_label["label"]
 
             # Make it compact and consistent
             test_no_nones = remove_none(test_no_label)
-            test_no_label_string = json.dumps(test_no_nones, separators=(',', ':'), sort_keys=True)
+            test_no_label_string = json.dumps(
+                test_no_nones, separators=(",", ":"), sort_keys=True
+            )
 
             # Create the 32 byte hasn, consisten with Javascript
             hasher = hashlib.sha1()
             hasher.update(test_no_label_string.encode("utf-8"))
             hex_digest = hasher.hexdigest()
-            test['hexhash'] = hex_digest
+            test["hexhash"] = hex_digest
 
         return True  # Indicates OK
 
     def saveJsonFile(self, filename, data, indent=None):
-        if 'tests' in data:
+        if "tests" in data:
             hash_ok = self.generateTestHashValues(data)
             if not hash_ok:
-                logging.error('### Problems generating hash codes for file %s',
-                              filename)
+                logging.error(
+                    "### Problems generating hash codes for file %s", filename
+                )
 
         output_path = os.path.join("DDT_DATA", "testData", self.icu_version, filename)
         output_file = open(output_path, "w", encoding="UTF-8")
@@ -87,7 +97,6 @@ class DataGenerator(ABC):
 
     def getTestDataFromGitHub(self, datafile_name, version):
         # Path for fetching test data from ICU repository
-        latest = 'https://raw.githubusercontent.com/unicode-org/icu/main/icu4c/source/test/testdata/"'
         pattern0 = "https://raw.githubusercontent.com/unicode-org/icu/"
 
         if version == "LATEST":
