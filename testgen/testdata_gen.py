@@ -26,9 +26,7 @@ def generate_versioned_data_parallel(args):
         len(args.icu_versions),
     )
 
-    version_data = []
-    for icu_version in args.icu_versions:
-        version_data.append({"icu_version": icu_version, "args": args})
+    version_data = [{"icu_version": args.icu_version, "args": args}]
 
     processor_pool = mp.Pool(num_processors)
     with processor_pool as p:
