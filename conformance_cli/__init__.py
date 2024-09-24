@@ -2,8 +2,8 @@ import os
 import sys
 import argparse
 
-from .parsers.testdriver import add_testdriver_subparser
-from .parsers.testgen import add_testgen_subparser
+from .argparsers.testdriver import add_testdriver_subparser
+from .argparsers.testgen import add_testgen_subparser
 from .config import init_config
 
 DOCKER_BUILD_CMD = "docker build -t conformance:latest ."
@@ -24,12 +24,13 @@ def run():
 
     # Importing after containerizing to avoid missing dependencies
     from testgen import testdata_gen
+    from testdriver import testdriver
 
     if args.command == "testgen":
         testdata_gen.run(args)
 
     if args.command == "run":
-        print("TODO: Invoke testdriver with args", args.exec)
+        testdriver.run(args)
 
 
 def parse_args():

@@ -11,6 +11,7 @@ import time
 
 # Set up and execute a testing plan for DDT
 
+
 class TestPlan:
     def __init__(self, exec_data, test_type, args=None):
         self.tests = None
@@ -25,12 +26,12 @@ class TestPlan:
         self.exec_env = None
         self.exec_command = None
         self.exec_list = None
-        if exec_data and 'path' in exec_data:
-            self.exec_command = exec_data['path']
-        if 'env' in exec_data:
-            self.exec_env = exec_data['env']
+        if exec_data and "path" in exec_data:
+            self.exec_command = exec_data["path"]
+        if "env" in exec_data:
+            self.exec_env = exec_data["env"]
         self.test_type = test_type
-        self.runStyle = 'one_test'
+        self.runStyle = "one_test"
         self.parallelMode = None
         self.options = None
         self.testData = None
@@ -47,7 +48,7 @@ class TestPlan:
         self.resultsFile = None
 
         self.jsonOutput = {}  # Area for adding elements for the results file
-        self.platformVersion = ''  # Records the executor version
+        self.platformVersion = ""  # Records the executor version
         self.icu_version = None  # Requested by the test driver.
         self.run_limit = None  # Set to positive integer to activate
         self.debug = 1
@@ -57,17 +58,18 @@ class TestPlan:
 
         self.verifier = None
 
-        logging.config.fileConfig("../logging.conf")
-
     def set_options(self, options):
         self.options = options
         try:
             self.icu_version = options.icu_version
         except KeyError:
-            logging.warning('NO ICU VERSION SET')
+            logging.warning("NO ICU VERSION SET")
 
         if options.ignore and not options.ignore == "null":
             self.ignore = True
+
+    def set_icu_version(self, icu_version):
+        self.icu_version = icu_version
 
     def set_test_data(self, test_data):
         self.testData = test_data  # ???['tests']
@@ -88,67 +90,76 @@ class TestPlan:
 
         # If icu_version is "latest" or not set, get the highest numbered
         # version of the test data
-        input_root = os.path.join(self.options.file_base,
-                                  self.options.input_path)
-        icu_test_dirs = glob.glob('icu*', root_dir=input_root)
+        input_root = os.path.join(self.options.file_base, self.options.input_path)
+        icu_test_dirs = glob.glob("icu*", root_dir=input_root)
         if not icu_test_dirs:
-            raise Exception('No ICU test data found in directory %s' % input_root)
+            raise Exception("No ICU test data found in directory %s" % input_root)
 
-        if self.icu_version not in icu_test_dirs:
+        icu_dirname = f"icu{self.icu_version}"
+        if icu_dirname not in icu_test_dirs:
             # Test data versions are given as "icu" + primary number, e.g., "73"
             # TODO: Consider sorting with possible dotted versions, e.g., 73.1.3
             newest_version = sorted(icu_test_dirs, reverse=True)[0]
-            logging.info('** Replacing proposed icu version of %s with version %s',
-                         self.icu_version, newest_version)
+            logging.info(
+                "** Replacing proposed icu version of %s with version %s",
+                icu_dirname,
+                newest_version,
+            )
             self.icu_version = newest_version
 
-        if self.test_lang == 'node' and 'node_version' in self.options:
+        if self.test_lang == "node" and "node_version" in self.options:
             # Set up for the version of node selected
-            nvm_command = 'nvm use %s' % self.options.node_version
+            nvm_command = "nvm use %s" % self.options.node_version
             # TODO: Figure out how to use nvm in a command
             # result = subprocess.run(['bash', '-c', nvm_command])
 
-        self.inputFilePath = os.path.join(self.options.file_base,
-                                          self.options.input_path,
-                                          self.icu_version,
-                                          self.testData.testDataFilename)
+        self.inputFilePath = os.path.join(
+            self.options.file_base,
+            self.options.input_path,
+            self.icu_version,
+            self.testData.testDataFilename,
+        )
 
         # !!! TODO: create better lang-specific output
         output_dir = self.test_lang
-        self.outputFilePath = os.path.join(self.options.file_base,
-                                           self.options.output_path,
-                                           self.options.icu_version,
-                                           # self.platformVersion,
-                                           output_dir,
-                                           self.testData.testDataFilename)
-        self.verifyFilePath = os.path.join(self.options.file_base,
-                                           self.options.report_path,
-                                           output_dir,
-                                           self.testData.testDataFilename)
+        self.outputFilePath = os.path.join(
+            self.options.file_base,
+            self.options.output_path,
+            self.options.icu_version,
+            # self.platformVersion,
+            output_dir,
+            self.testData.testDataFilename,
+        )
+        self.verifyFilePath = os.path.join(
+            self.options.file_base,
+            self.options.report_path,
+            output_dir,
+            self.testData.testDataFilename,
+        )
         if self.options.debug_level:
             self.debug = True
 
         if self.options.run_limit:
             self.run_limit = int(self.options.run_limit)
             if self.debug:
-                logging.debug('!!! RUN LIMIT SET: %d', self.run_limit)
+                logging.debug("!!! RUN LIMIT SET: %d", self.run_limit)
 
         if self.debug:
-            logging.debug('Running plan %s on data %s',
-                self.exec_command, self.inputFilePath)
+            logging.debug(
+                "Running plan %s on data %s", self.exec_command, self.inputFilePath
+            )
 
-        if self.options.exec_mode == 'one_test':
+        if self.options.exec_mode == "one_test":
             self.run_one_test_mode()
         else:
             self.run_multitest_mode()
-        return
 
     def request_executor_info(self):
         version_info = "#VERSION\n#EXIT\n"
         result = self.send_one_line(version_info)
         if result and result[0] == "#":
             # There's debug data. Take the 2nd line of this result
-            result_lines = result.split('\n')
+            result_lines = result.split("\n")
             result = result_lines[1]
 
         if not result:
@@ -156,12 +167,15 @@ class TestPlan:
             return None
         else:
             if self.debug:
-                logging.debug('EXECUTOR INFO = %s', result)
+                logging.debug("EXECUTOR INFO = %s", result)
 
             try:
                 self.jsonOutput["platform"] = json.loads(result)
             except json.JSONDecodeError as error:
-                logging.error("Encountered error in parsing executor result string as JSON: %s", error)
+                logging.error(
+                    "Encountered error in parsing executor result string as JSON: %s",
+                    error,
+                )
                 logging.error("Result string received from executor: [%s]", result)
                 return None
 
@@ -171,20 +185,24 @@ class TestPlan:
                 try:
                     self.cldrVersion = self.jsonOutput["platform"]["cldrVersion"]
                 except KeyError:
-                    self.cldrVersion = 'CLDR version not specified'
+                    self.cldrVersion = "CLDR version not specified"
 
                 # TODO: Clean this up!
                 # Get the test data area from the icu_version
 
                 # Reset the output path based on the version.
-                self.outputFilePath = os.path.join(self.options.file_base,
-                                                   self.options.output_path,
-                                                   self.test_lang,
-                                                   self.options.icu_version,
-                                                   # self.platformVersion,
-                                                   self.testData.testDataFilename)
+                self.outputFilePath = os.path.join(
+                    self.options.file_base,
+                    self.options.output_path,
+                    self.test_lang,
+                    self.options.icu_version,
+                    # self.platformVersion,
+                    self.testData.testDataFilename,
+                )
             except (KeyError, IndexError) as error:
-                logging.error("Encountered error processing executor JSON values: %s", error)
+                logging.error(
+                    "Encountered error processing executor JSON values: %s", error
+                )
                 return None
         return True
 
@@ -193,14 +211,14 @@ class TestPlan:
         terminate_msg = "#EXIT"
         result = None
         if terminate_args:
-            terminate_msg += ' ' + terminate_args
+            terminate_msg += " " + terminate_args
             result = self.send_one_line(terminate_msg)
 
         if not result:
             self.jsonOutput["platform error"] = self.run_error_message
         else:
             if self.debug:
-                logging.debug('TERMINATION INFO = %s', result)
+                logging.debug("TERMINATION INFO = %s", result)
                 self.jsonOutput["platform"] = json.loads(result)
 
     def generate_header(self):
@@ -211,16 +229,15 @@ class TestPlan:
             "test_language": self.test_lang,
             "executor": self.exec_command,
             "test_type": self.test_type,
-            "datetime": run_date_time.strftime('%m/%d/%Y, %H:%M:%S'),
+            "datetime": run_date_time.strftime("%m/%d/%Y, %H:%M:%S"),
             "timestamp": timestamp,
             "input_file": self.inputFilePath,
-
             # These should come from the Executor
             "icu_version": self.icuVersion,
             "cldr_version": self.cldrVersion,
-            "test_count": len(self.tests)
+            "test_count": len(self.tests),
         }
-        self.jsonOutput['test_environment'] = test_environment
+        self.jsonOutput["test_environment"] = test_environment
         return test_environment
 
     def complete_output_file(self, error_info):
@@ -228,7 +245,7 @@ class TestPlan:
             # Generate final part of JSON output.
             # Adding terminators for JSON list and object
 
-            self.jsonOutput['error_info'] = error_info
+            self.jsonOutput["error_info"] = error_info
 
             # Create JSON output. Add indent= for pretty printing.
             self.resultsFile.write(json.dumps(self.jsonOutput))
@@ -238,8 +255,11 @@ class TestPlan:
 
     def run_one_test_mode(self):
         if self.debug:
-            logging.debug('  Running OneTestMode %s on data %s',
-                  self.exec_command, self.inputFilePath)
+            logging.debug(
+                "  Running OneTestMode %s on data %s",
+                self.exec_command,
+                self.inputFilePath,
+            )
 
         # Set up calls for version data --> results
 
@@ -253,16 +273,18 @@ class TestPlan:
             return None
 
         if self.debug:
-            logging.info('@@@ %d tests found', len(tests))
+            logging.info("@@@ %d tests found", len(tests))
 
         # Initialize JSON output headers --> results
 
         self.exec_list = self.exec_command.split()
         # TODO: get other things about the exec
         if self.debug:
-            logging.info('EXEC info: exec_command %s, exec_list >%s<',
-                         self.exec_command,
-                         self.exec_list)
+            logging.info(
+                "EXEC info: exec_command %s, exec_list >%s<",
+                self.exec_command,
+                self.exec_list,
+            )
 
         # Start the JSON output
         # Set up calls for version data --> results
@@ -278,19 +300,24 @@ class TestPlan:
             if not os.path.isdir(result_dir):
                 os.makedirs(result_dir)
         except BaseException as error:
-            sys.stderr.write('!!!%s:  Cannot create directory %sfor report file %s' %
-                             (error, result_dir, self.outputFilePath))
+            sys.stderr.write(
+                "!!!%s:  Cannot create directory %sfor report file %s"
+                % (error, result_dir, self.outputFilePath)
+            )
             return None
 
         # Create results file
         try:
             if self.debug:
-                logging.debug('++++++ Results file path = %s', self.outputFilePath)
-                self.resultsFile = open(self.outputFilePath, encoding='utf-8', mode='w')
+                logging.debug("++++++ Results file path = %s", self.outputFilePath)
+                self.resultsFile = open(self.outputFilePath, encoding="utf-8", mode="w")
         except BaseException as error:
-            logging.error('*** Cannot open results file at %s. Err = %s',
-                  self.outputFilePath, error)
-            self.resultsFile = open(self.outputFilePath, encoding='utf-8', mode='w')
+            logging.error(
+                "*** Cannot open results file at %s. Err = %s",
+                self.outputFilePath,
+                error,
+            )
+            self.resultsFile = open(self.outputFilePath, encoding="utf-8", mode="w")
 
         # Store information the test run
         # TODO: remove!??
@@ -315,10 +342,10 @@ class TestPlan:
         env_dict = {}
         try:
             env_string = self.options.environment
-            env_options = env_string.split(';')
+            env_options = env_string.split(";")
             # Set the environment from the options, each separated with '='
             for option in env_options:
-                parts = option.split('=')
+                parts = option.split("=")
                 env_dict[parts[0]] = parts[1]
                 # The environment variables for running the command line.
             self.exec_env = env_dict
@@ -346,14 +373,19 @@ class TestPlan:
         test_lines = []
 
         # N tests may be given to send_one_line in a single batch.
-        formatted_count = '{:,}'.format(test_count)
+        formatted_count = "{:,}".format(test_count)
         for test in self.tests:
             test.update({"test_type": self.test_type})
 
             if self.progress_interval and test_num % self.progress_interval == 0:
-                formatted_num = '{:,}'.format(test_num)
-                logging.debug('Testing %s / %s. %s of %s', 
-                    self.exec_list[0], self.testScenario, formatted_num, formatted_count)
+                formatted_num = "{:,}".format(test_num)
+                logging.debug(
+                    "Testing %s / %s. %s of %s",
+                    self.exec_list[0],
+                    self.testScenario,
+                    formatted_num,
+                    formatted_count,
+                )
 
             # Accumulate tests_per_execution items into a single outline
             if lines_in_batch < tests_per_execution:
@@ -367,7 +399,13 @@ class TestPlan:
                 else:
                     num_errors += 1
                     logging.error("!!!!!! platform error: %s", self.run_error_message)
-                    logging.error('  %s %s %s %s', self.test_type, self.test_lang, self.icu_version, self.platformVersion)
+                    logging.error(
+                        "  %s %s %s %s",
+                        self.test_type,
+                        self.test_lang,
+                        self.icu_version,
+                        self.platformVersion,
+                    )
 
                 # Reset the batch
                 lines_in_batch = 0
@@ -375,13 +413,13 @@ class TestPlan:
 
             test_num += 1
             if self.run_limit and test_num > self.run_limit:
-                logging.info('** Stopped after %d tests', (test_num - 1))
+                logging.info("** Stopped after %d tests", (test_num - 1))
                 break
 
         # PROCESS THE LAST BATCH, if any
         all_test_results.extend(self.process_batch_of_tests(test_lines))
 
-        self.jsonOutput['tests'] = all_test_results
+        self.jsonOutput["tests"] = all_test_results
 
         return num_errors
 
@@ -393,13 +431,13 @@ class TestPlan:
             return []
 
         if self.debug > 2:
-            logging.debug('PROCESSING %d tests', len(tests_to_send))
+            logging.debug("PROCESSING %d tests", len(tests_to_send))
 
         # Ask process to exit when finished.
-        out_and_exit = '\n'.join(tests_to_send) + '\n#EXIT\n'
+        out_and_exit = "\n".join(tests_to_send) + "\n#EXIT\n"
 
         if self.debug > 2:
-            logging.info('+++ Test LINE TO EXECUTOR = %s', out_and_exit)
+            logging.info("+++ Test LINE TO EXECUTOR = %s", out_and_exit)
 
         result = self.send_one_line(out_and_exit)
 
@@ -407,18 +445,20 @@ class TestPlan:
         # don't sent more of that type.
         if not result:
             num_errors += 1
-            logging.warning('!!!!!! process_batch_of_tests: "platform error": "%s"\n',
-                            self.run_error_message)
+            logging.warning(
+                '!!!!!! process_batch_of_tests: "platform error": "%s"\n',
+                self.run_error_message,
+            )
             return None
 
         if self.debug > 2:
-            logging.info('+++ Line from EXECUTOR = %s', result)
+            logging.info("+++ Line from EXECUTOR = %s", result)
 
         index = 0
         batch_out = []
-        for item in result.split('\n'):
+        for item in result.split("\n"):
             if self.debug > 1:
-                logging.info(' RESULT %d = (%d)  >%s<', index, len(item), item)
+                logging.info(" RESULT %d = (%d)  >%s<", index, len(item), item)
             if not item or len(item) <= 0:
                 # Check for special results returned from the executor,
                 # indicated by '#' in the first column of the line returned.
@@ -426,36 +466,44 @@ class TestPlan:
                 # TODO: Document these, perhaps in the project's JSON schema.
                 continue
             if item[0] == "#":
-                logging.debug('#### DEBUG OUTPUT = %s', item)
+                logging.debug("#### DEBUG OUTPUT = %s", item)
 
             # Process some types of errors
             if item[1:3] == "!!" and self.debug > 1:
                 logging.warning(" !!!!!!!!!!!!!!!!! ERROR: %s", item)
                 # Extract the message and check if we continue or not.
-                json_start = item.index('{')
+                json_start = item.index("{")
                 json_text = item[json_start:]
-                logging.debug('JSON TEXT = %s', json_text)
+                logging.debug("JSON TEXT = %s", json_text)
                 json_out = json.loads(json_text)
-                if 'error_retry' in json_out and json_out['error_retry']:
-                    should_retry = json_out['error_retry']
-                    logging.warning('!!! SHOULD RETRY = %s', should_retry)
-            elif not(item is None) and item != "":
+                if "error_retry" in json_out and json_out["error_retry"]:
+                    should_retry = json_out["error_retry"]
+                    logging.warning("!!! SHOULD RETRY = %s", should_retry)
+            elif not (item is None) and item != "":
                 try:
                     json_out = json.loads(item)
                     batch_out.append(json_out)
                 except BaseException as error:
                     if self.debug > 1:
-                        logging.warning('   && Item %s. Error in= %s. Received (%d): >%s<',
-                                        index, error, len(item), item)
+                        logging.warning(
+                            "   && Item %s. Error in= %s. Received (%d): >%s<",
+                            index,
+                            error,
+                            len(item),
+                            item,
+                        )
                     index += 1
 
         return batch_out
 
     def run_multitest_mode(self):
         # TODO Implement this
-        logging.info('!!! Running MultiTestMode %s on data %s',
-                     self.exec_command, self.inputFilePath)
-        logging.warning('  ** UNIMPLEMENTED **')
+        logging.info(
+            "!!! Running MultiTestMode %s on data %s",
+            self.exec_command,
+            self.inputFilePath,
+        )
+        logging.warning("  ** UNIMPLEMENTED **")
         # Open the input file and get tests
         # Open results file
 
@@ -477,62 +525,71 @@ class TestPlan:
     def open_json_test_data(self):
         # Read JSON file with results.
         try:
-            input_file = open(self.inputFilePath,
-                              encoding='utf-8', mode='r')
+            input_file = open(self.inputFilePath, encoding="utf-8", mode="r")
             file_raw = input_file.read()
             input_file.close()
             try:
                 self.jsonData = json.loads(file_raw)
             except json.JSONDecodeError as error:
-                logging.error('CANNOT parse JSON from file %s: %s', self.inputFilePath, error)
+                logging.error(
+                    "CANNOT parse JSON from file %s: %s", self.inputFilePath, error
+                )
                 return None
         except FileNotFoundError as err:
-            logging.debug('*** Cannot open file %s. Err = %s', self.inputFilePath, err)
+            logging.debug("*** Cannot open file %s. Err = %s", self.inputFilePath, err)
             return None
 
         try:
-            self.testScenario = self.jsonData['Test scenario']  # e.g., decimal_fmt
+            self.testScenario = self.jsonData["Test scenario"]  # e.g., decimal_fmt
         except KeyError as error:
             self.testScenario = self.test_type
 
-        self.tests = self.jsonData['tests']
+        self.tests = self.jsonData["tests"]
         return self.tests
 
     # Send a single line of data or command to Stdout, capturing the output
     def send_one_line(self, input_line):
         self.run_error_message = None
         try:
-            result = subprocess.run(self.exec_command,
-                                    input=input_line,  # Usually a JSON string.
-                                    encoding='utf-8',
-                                    capture_output=True,
-                                    env=self.exec_env,
-                                    shell=True)
+            result = subprocess.run(
+                self.exec_command,
+                input=input_line,  # Usually a JSON string.
+                encoding="utf-8",
+                capture_output=True,
+                env=self.exec_env,
+                shell=True,
+            )
             if not result.returncode:
                 return result.stdout
             else:
-                logging.debug('$$$$$$$$$$$$$$$$ ---> return code: %s', result.returncode)
-                logging.debug('    ----> INPUT LINE= >%s<', input_line)
-                logging.debug('    ----> STDOUT= >%s<', result.stdout)
-                self.run_error_message = '!!!! ERROR IN EXECUTION: %s. STDERR = %s' % (
-                    result.returncode, result.stderr)
-                logging.error(' !!!!!! exec_list = %s\n  input_line = %s' % (self.exec_list, input_line))
-                logging.error(' !!!!!! %s' % self.run_error_message)
+                logging.debug(
+                    "$$$$$$$$$$$$$$$$ ---> return code: %s", result.returncode
+                )
+                logging.debug("    ----> INPUT LINE= >%s<", input_line)
+                logging.debug("    ----> STDOUT= >%s<", result.stdout)
+                self.run_error_message = "!!!! ERROR IN EXECUTION: %s. STDERR = %s" % (
+                    result.returncode,
+                    result.stderr,
+                )
+                logging.error(
+                    " !!!!!! exec_list = %s\n  input_line = %s"
+                    % (self.exec_list, input_line)
+                )
+                logging.error(" !!!!!! %s" % self.run_error_message)
 
                 # Handle problems with decoding errors and other unknowns.
-                error_result = {'label': 'UNKNOWN',
-                                'input_data': input_line,
-                                'error': self.run_error_message
-                                }
+                error_result = {
+                    "label": "UNKNOWN",
+                    "input_data": input_line,
+                    "error": self.run_error_message,
+                }
                 return json.dumps(error_result)
         except BaseException as err:
-            logging.error('!!! send_one_line fails: input => %s<. Err = %s', input_line, err)
-            input = json.loads(input_line.replace('#EXIT', '').strip())
-            error_result = {'label': input['label'],
-                            'input_data': input,
-                            'error': err
-                            }
+            logging.error(
+                "!!! send_one_line fails: input => %s<. Err = %s", input_line, err
+            )
+            input = json.loads(input_line.replace("#EXIT", "").strip())
+            error_result = {"label": input["label"], "input_data": input, "error": err}
             return json.dumps(error_result)
-
 
         return None

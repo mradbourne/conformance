@@ -32,3 +32,9 @@ class Executor(str, Enum):
 
 
 executors = [e.value for e in Executor]
+
+paths = {
+    "default_input": "DDT_DATA/testData",
+    "default_output": "DDT_DATA/testOutput",
+    "default_report": "DDT_DATA/testReports",
+}

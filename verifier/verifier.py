@@ -9,13 +9,13 @@ import os
 import shutil
 import sys
 
+import testdriver.datasets as ddt_data
+from .verifier_args import VerifyArgs
+
 from testreport import SummaryReport
 from testreport import TestReport
 from verify_plan import VerifyPlan
 
-sys.path.append('../testdriver')
-import datasets as ddt_data
-from ddtargs import VerifyArgs
 
 # Global constants
 VERIFIER_REPORT_NAME = 'verifier_test_report.json'
