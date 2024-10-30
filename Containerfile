@@ -132,6 +132,7 @@ RUN set -eux; \
     echo "Complete."
 
 # Install Maven
+# Based on https://github.com/carlossg/docker-maven/blob/main/eclipse-temurin-17/Dockerfile
 ARG MAVEN_VERSION=3.9.9
 ARG USER_HOME_DIR="/root"
 ARG SHA=a555254d6b53d267965a3404ecb14e53c3827c09c3b94b5678835887ab404556bfaf78dcfe03ba76fa2508649dca8531c74bca4d5846513522404d48e8c4ac8b
